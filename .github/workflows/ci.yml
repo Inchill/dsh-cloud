@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # shellcheck 用官方镜像跑，不引入第三方 action，减少供应链面
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable \
+            bootstrap.sh teardown.sh tests/cli.sh tests/e2e/run.sh tests/e2e/check.sh
+
+  # 两个平台都跑：脚本最终在 Linux 上执行，但开发机多是 macOS，
+  # BSD 工具链的差异（如变量名后紧跟多字节字符）只有双平台才暴露得出来
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash 语法检查
+        run: bash -n bootstrap.sh teardown.sh tests/cli.sh tests/e2e/run.sh tests/e2e/check.sh
+      - name: CLI 行为测试
+        run: bash tests/cli.sh
+
+  # 真装一遍。apt/npm 这些外部依赖写错了，上面两个 job 都发现不了。
+  # 只在 main 和手动触发跑，避免吃掉 PR 的额度。
+  e2e:
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        base: [ubuntu:24.04, debian:12]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: 在 ${{ matrix.base }} 上跑 bootstrap
+        run: bash tests/e2e/run.sh ${{ matrix.base }}
