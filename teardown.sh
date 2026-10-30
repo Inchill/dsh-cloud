@@ -100,7 +100,11 @@ fi
 step "dsh"
 
 if command -v dsh >/dev/null; then
-  sudo npm uninstall -g @deepseek-ai/dsh >/dev/null 2>&1 && ok "已卸载" || skip "卸载失败，可手动执行"
+  if sudo npm uninstall -g @deepseek-ai/dsh >/dev/null 2>&1; then
+    ok "已卸载"
+  else
+    skip "卸载失败，可手动执行"
+  fi
 else
   skip "未安装"
 fi

@@ -58,8 +58,7 @@ PROBE="$(mktemp)"
 printf 'ID=ubuntu\nPRETTY_NAME="Ubuntu (test)"\n' > "$OSR"
 sed -e "s|/etc/os-release|$OSR|g" "$SCRIPT" > "$PROBE"
 chmod +x "$PROBE"
-cleanup() { rm -f "$OSR" "$PROBE"; }
-trap cleanup EXIT
+trap 'rm -f "$OSR" "$PROBE"' EXIT
 
 assert_has() {
   local desc="$1" hay="$2" needle="$3"

@@ -109,6 +109,7 @@ fi
 # 用真正的 open 判断 tty 是否可用：没有控制终端时 /dev/tty 存在但打开会 ENXIO。
 tty_read() {
   local prompt="$1" target="$2" silent="${3:-0}"
+  local value
   if [ "$INTERACTIVE" -eq 0 ]; then
     return 1
   fi
@@ -118,12 +119,14 @@ tty_read() {
   exec 3<>/dev/tty
   printf '%s' "$prompt" >&3
   if [ "$silent" -eq 1 ]; then
-    IFS= read -rs "$target" <&3 || { exec 3>&- 2>/dev/null || true; return 1; }
+    IFS= read -rs value <&3 || { exec 3>&- 2>/dev/null || true; return 1; }
     printf '\n' >&3
   else
-    IFS= read -r "$target" <&3 || { exec 3>&- 2>/dev/null || true; return 1; }
+    IFS= read -r value <&3 || { exec 3>&- 2>/dev/null || true; return 1; }
   fi
   exec 3>&- 2>/dev/null || true
+  # 写到调用方指定的变量上（read 的 "$target" 写法会被 shellcheck 判为 SC2229）
+  printf -v "$target" '%s' "$value"
   return 0
 }
 
