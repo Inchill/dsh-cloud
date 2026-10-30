@@ -123,7 +123,7 @@ bash teardown.sh --purge
 ## 开发
 
 ```sh
-bash tests/cli.sh                 # 19 项：参数解析、预检、dry-run 渲染、变量边界
+bash tests/cli.sh                 # 21 项：参数解析、预检、dry-run 渲染、变量边界
 bash tests/e2e/run.sh             # 真装一遍（需要 docker，约 3-5 分钟）
 bash tests/e2e/run.sh debian:12   # 换发行版
 ```
