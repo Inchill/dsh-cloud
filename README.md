@@ -128,6 +128,9 @@ bash tests/e2e/run.sh             # 真装一遍（需要 docker，约 3-5 分�
 bash tests/e2e/run.sh debian:12   # 换发行版
 ```
 
+`tests/cli.sh` 还会顺带核对文档：README 里记的项数要对得上，脚本和 teardown 的每个开关都得在文档里出现过。
+数字、开关名这类东西不会报错，只会慢慢变错，让 CI 盯着比自己记着可靠。
+
 三层测试覆盖的东西不一样：
 
 | 层 | 覆盖什么 | 需要什么 |

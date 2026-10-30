@@ -124,10 +124,53 @@ else
   fail "没有 \$VAR 紧跟非 ASCII 字符" "全部使用 \${VAR}" "$(printf '%s' "$bad_vars" | head -3 | tr '\n' ' ')"
 fi
 
+printf '\n文档一致性\n'
+# 这一类检查不计入 total：它们校验的是「文档有没有跟上代码」，
+# 本身不是行为测试，也不该把 README 里那个数字搞成自指的循环。
+doc_ng=0
+doc_ok() { printf '  \033[32m✓\033[0m %s\n' "$1"; }
+doc_bad() { printf '  \033[31m✗\033[0m %s\n' "$1"; doc_ng=$((doc_ng + 1)); }
+
+# 1) README 里写的测试项数
+doc_n="$(grep -oE '# [0-9]+ 项' README.md 2>/dev/null | grep -oE '[0-9]+' | head -1 || true)"
+if [ -z "$doc_n" ]; then
+  doc_bad "README 里找不到「# N 项」的说明"
+elif [ "$doc_n" -eq "$total" ]; then
+  doc_ok "README 记的项数与实际一致（$total 项）"
+else
+  doc_bad "README 说 $doc_n 项，实际 $total 项"
+fi
+
+# 2) 脚本支持的每个开关，README 里都要提到
+missing=""
+while IFS= read -r flag; do
+  [ -n "$flag" ] || continue
+  grep -qF -- "$flag" README.md || missing="$missing $flag"
+done < <(grep -oE '^\s+--[a-z-]+\)' "$SCRIPT" | tr -d ' )' | sort -u)
+if [ -z "$missing" ]; then
+  doc_ok "脚本的每个开关都在 README 里出现过"
+else
+  doc_bad "README 没提到：$missing"
+fi
+
+# 3) teardown 的开关同样要对得上
+missing=""
+while IFS= read -r flag; do
+  [ -n "$flag" ] || continue
+  grep -qF -- "$flag" README.md || missing="$missing $flag"
+done < <(grep -oE '^\s+--[a-z-]+' ./teardown.sh | tr -d ' ' | sort -u)
+if [ -z "$missing" ]; then
+  doc_ok "teardown.sh 的开关都在 README 里出现过"
+else
+  doc_bad "README 没提到 teardown 的：$missing"
+fi
+
 printf '\n'
-if [ "$fails" -eq 0 ]; then
-  printf '\033[32m全部 %d 项通过\033[0m\n\n' "$total"
+if [ "$fails" -eq 0 ] && [ "$doc_ng" -eq 0 ]; then
+  printf '\033[32m全部 %d 项通过，文档一致\033[0m\n\n' "$total"
   exit 0
 fi
-printf '\033[31m%d/%d 项失败\033[0m\n\n' "$fails" "$total"
+[ "$fails" -gt 0 ] && printf '\033[31m%d/%d 项失败\033[0m\n' "$fails" "$total"
+[ "$doc_ng" -gt 0 ] && printf '\033[31m%d 项文档不一致\033[0m\n' "$doc_ng"
+printf '\n'
 exit 1
