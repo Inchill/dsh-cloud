@@ -12,17 +12,17 @@
 ## 安装
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Inchill/dsh-cloud/<commit-sha>/bootstrap.sh \
+curl -fsSL https://raw.githubusercontent.com/Inchill/dsh-cloud/937ce5e042b722db6bb653f5f5dc6b7173fd4387/bootstrap.sh \
   | bash -s -- --port 3080
 ```
 
-> 上面钉的是具体 commit。想跟最新代码可以把 `<commit-sha>` 换成 `main`，但生产环境别这么干 ——
+> 上面钉的是具体 commit。想跟最新代码可以把那段哈希换成 `main`，但生产环境别这么干 ——
 > 上游一改，你下次重装跑的就是另一份代码。
 
 建议的做法是先看再跑，毕竟它会 `sudo` 并写 systemd：
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/Inchill/dsh-cloud/<commit-sha>/bootstrap.sh
+curl -fsSLO https://raw.githubusercontent.com/Inchill/dsh-cloud/937ce5e042b722db6bb653f5f5dc6b7173fd4387/bootstrap.sh
 less bootstrap.sh
 bash bootstrap.sh
 ```
